@@ -8,6 +8,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("-f", "--format", help="Standard format abbreviation (e.g., ASC)", default="POR")
     parser.add_argument("-d", "--deck-export", help="Path to Deck export", required=True)
     parser.add_argument("-p", "--player", help="Player Name", required=True)
+    parser.add_argument("-i", "--player-id", help="Player ID", required=True)
     parser.add_argument("-v", "--verbose", action="count", default=0)
 
     return parser.parse_args()

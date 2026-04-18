@@ -24,13 +24,14 @@ def run() -> None:
 
     logger.setLevel(logging.WARNING - args.verbose * 10)
 
-    write_fields(player_name=args.player, format=args.format)
+    write_fields(format=args.format, player_name=args.player, player_id=args.player_id)
 
 
-def write_fields(player_name: str, format: str) -> None:
+def write_fields(format: str, player_name: str, player_id: str) -> None:
     format = format.upper()
     fields = [
         DeckListField(name="Player Name", x=93, y=713, text=player_name, size=10),
+        DeckListField(name="Player ID", x=280, y=713, text=player_id, size=10),
     ]
     title = f"{player_name} Deck List - {format}"
 
