@@ -1,6 +1,7 @@
 import logging
 import sys
 import os
+from datetime import datetime
 from pathlib import Path
 from collections import namedtuple
 
@@ -9,6 +10,7 @@ from PyPDFForm import PdfWrapper, RawElements
 import pokemon_tcg_deck_list_generator.cli as cli
 
 DeckListField = namedtuple(typename="DeckListField", field_names=["name", "x", "y", "text", "size"])
+Player = namedtuple(typename="Player", field_names=["name", "id", "dob", "division"])
 
 logging.basicConfig(stream=sys.stdout, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -24,16 +26,21 @@ def run() -> None:
 
     logger.setLevel(logging.WARNING - args.verbose * 10)
 
-    write_fields(format=args.format, player_name=args.player, player_id=args.player_id)
+    player_fields = {k.replace("player_", ""): v for k, v in vars(args).items() if k not in ["format", "verbose"]}
+    write_fields(format=args.format, player=Player(**player_fields))
 
 
-def write_fields(format: str, player_name: str, player_id: str) -> None:
+def write_fields(format: str, player: Player) -> None:
     format = format.upper()
+    player_birthdate = datetime.strptime(player.dob, "%Y-%m-%d")
     fields = [
-        DeckListField(name="Player Name", x=93, y=713, text=player_name, size=10),
-        DeckListField(name="Player ID", x=280, y=713, text=player_id, size=10),
+        DeckListField(name="Player Name", x=95, y=713, text=player.name, size=10),
+        DeckListField(name="Player ID", x=285, y=713, text=player.id, size=10),
+        DeckListField(name="Player Birth Month", x=497, y=713, text=str(player_birthdate.month).zfill(2), size=10),
+        DeckListField(name="Player Birth Day", x=524, y=713, text=str(player_birthdate.day).zfill(2), size=10),
+        DeckListField(name="Player Birth Year", x=552, y=713, text=player_birthdate.year, size=10),
     ]
-    title = f"{player_name} Deck List - {format}"
+    title = f"{player.name} Deck List - {format}"
 
     decklist_template_path = PACKAGE_PATH / "assets" / "lists" / f"{format}.pdf"
     logger.debug(f"Template Path: {decklist_template_path}")
