@@ -17,7 +17,8 @@ logger = logging.getLogger(__name__)
 
 SRC_PATH, PACKAGE_NAME = os.path.split(os.path.dirname(__file__))
 PACKAGE_PATH = Path(SRC_PATH) / PACKAGE_NAME
-OUTPUT_DIR = Path(os.path.dirname(SRC_PATH)) / "output"
+ROOT_DIR = Path(os.path.dirname(SRC_PATH))
+OUTPUT_DIR = ROOT_DIR / "output"
 Path.mkdir(OUTPUT_DIR, exist_ok=True)
 
 
@@ -26,7 +27,9 @@ def run() -> None:
 
     logger.setLevel(logging.WARNING - args.verbose * 10)
 
-    player_fields = {k.replace("player_", ""): v for k, v in vars(args).items() if k not in ["format", "verbose"]}
+    player_fields = {
+        k.replace("player_", ""): v for k, v in vars(args).items() if k not in ["deck_filename", "format", "verbose"]
+    }
     player = Player(**player_fields)
     font_path = PACKAGE_PATH / "assets" / "fonts" / "OpenSans_Condensed-Regular.ttf"
     logger.debug(f"Font Path: {font_path}")
@@ -40,6 +43,7 @@ def run() -> None:
     logger.info(f"Registered Fonts: {decklist.fonts}")
 
     write_player_fields(pdf=decklist, player=player)
+    write_deck_fields(pdf=decklist, deck_path=args.deck_filename)
 
     output_file_path = OUTPUT_DIR / f"{title}.pdf"
     decklist.write(str(output_file_path))
@@ -70,3 +74,75 @@ def write_player_fields(pdf: PdfWrapper, player: Player) -> None:
     ]
 
     pdf.draw(content)
+
+
+def write_deck_fields(pdf: PdfWrapper, deck_path: str) -> None:
+    deck_export_path = ROOT_DIR / deck_path
+
+    assert deck_export_path.exists(), f"{deck_export_path} does not exist"
+
+    deck_list = deck_export_path.read_text().split("\n")
+
+    pokemon = []
+    trainers = []
+    energy = []
+    on_trainers = False
+    on_energy = False
+
+    for line in deck_list[1:]:
+        if not line:
+            continue
+
+        if line.startswith("Trainer: "):
+            on_trainers = True
+            continue
+
+        if line.startswith("Energy: "):
+            on_trainers = False
+            on_energy = True
+            continue
+
+        if on_energy:
+            energy.append(line)
+        elif on_trainers:
+            trainers.append(line)
+        else:
+            pokemon.append(line)
+
+    write_pokemon_list(pdf=pdf, pokemon=pokemon)
+
+
+def write_pokemon_list(pdf: PdfWrapper, pokemon: list[str]) -> None:
+    pokemon_content = []
+
+    card_count_x = 274
+    card_name_x = 300
+    card_set_x = 475
+    card_number_x = 515
+    card_field_y = 586
+    for card in pokemon:
+        logger.info(f"Processing Card: {card}")
+        card_count, card_name, card_set, card_number = card.split()
+        pokemon_content.append(
+            RawElements.RawText(
+                text=card_count, font="helvetica", font_size=10, page_number=1, x=card_count_x, y=card_field_y
+            )
+        )
+        pokemon_content.append(
+            RawElements.RawText(
+                text=card_name, font="helvetica", font_size=10, page_number=1, x=card_name_x, y=card_field_y
+            )
+        )
+        pokemon_content.append(
+            RawElements.RawText(
+                text=card_set, font="helvetica", font_size=10, page_number=1, x=card_set_x, y=card_field_y
+            )
+        )
+        pokemon_content.append(
+            RawElements.RawText(
+                text=card_number, font="helvetica", font_size=10, page_number=1, x=card_number_x, y=card_field_y
+            )
+        )
+        card_field_y -= 13.1
+
+    pdf.draw(pokemon_content)
