@@ -29,7 +29,9 @@ def run() -> None:
     logger.setLevel(logging.WARNING - args.verbose * 10)
 
     player_fields = {
-        k.replace("player_", ""): v for k, v in vars(args).items() if k not in ["deck_filename", "format", "verbose"]
+        k.replace("player_", ""): v
+        for k, v in vars(args).items()
+        if k in ["player_name", "player_id", "player_dob", "player_division"]
     }
     player = Player(**player_fields)
     font_path = PACKAGE_PATH / "assets" / "fonts" / "OpenSans_Condensed-Regular.ttf"
@@ -44,7 +46,7 @@ def run() -> None:
     logger.info(f"Registered Fonts: {decklist.fonts}")
 
     write_player_fields(pdf=decklist, player=player)
-    write_deck_fields(pdf=decklist, deck_path=args.deck_filename)
+    write_deck_fields(pdf=decklist, deck_path=args.deck_filename, has_regulation=args.has_regulation)
 
     output_file_path = OUTPUT_DIR / f"{title}.pdf"
     decklist.write(str(output_file_path))
@@ -77,7 +79,7 @@ def write_player_fields(pdf: PdfWrapper, player: Player) -> None:
     pdf.draw(content)
 
 
-def write_deck_fields(pdf: PdfWrapper, deck_path: str) -> None:
+def write_deck_fields(pdf: PdfWrapper, deck_path: str, has_regulation: bool = False) -> None:
     deck_export_path = ROOT_DIR / deck_path
 
     assert deck_export_path.exists(), f"{deck_export_path} does not exist"
@@ -110,23 +112,30 @@ def write_deck_fields(pdf: PdfWrapper, deck_path: str) -> None:
         else:
             pokemon.append(line)
 
-    write_pokemon_list(pdf=pdf, pokemon=pokemon)
+    write_pokemon_list(pdf=pdf, pokemon=pokemon, has_regulation=has_regulation)
     write_trainer_list(pdf=pdf, trainers=trainers)
     write_energy_list(pdf=pdf, energy=energy)
 
 
-def write_pokemon_list(pdf: PdfWrapper, pokemon: list[str]) -> None:
+def write_pokemon_list(pdf: PdfWrapper, pokemon: list[str], has_regulation: bool) -> None:
     pokemon_content = []
-    card_pattern = re.compile(r"([1-9]{1,2}) (.+) ([A-Z]{3}) ([0-9]{1,3})")
+    card_pattern = re.compile(r"([1-9]{1,2}) (.+) ([A-Z]{3}) ([0-9]{1,3})(.*)")
 
     card_count_x = 274
     card_name_x = 300
     card_set_x = 475
     card_number_x = 515
+    card_regulation_x = 555
     card_field_y = 586
     for card in pokemon:
         logger.info(f"Processing Pokémon Card: {card}")
-        card_count, card_name, card_set, card_number = card_pattern.match(card).group(1, 2, 3, 4)  # type: ignore
+        match = card_pattern.match(card)
+        card_count, card_name, card_set, card_number = match.group(1, 2, 3, 4)  # type: ignore
+        logger.debug(f"Card Matches: {match.groups()}")  # type: ignore
+        card_regulation = None
+        if has_regulation:
+            card_regulation = match.group(5)[1]  # type: ignore
+
         pokemon_content.append(
             RawElements.RawText(
                 text=card_count, font="helvetica", font_size=10, page_number=1, x=card_count_x, y=card_field_y
@@ -147,6 +156,17 @@ def write_pokemon_list(pdf: PdfWrapper, pokemon: list[str]) -> None:
                 text=card_number, font="helvetica", font_size=10, page_number=1, x=card_number_x, y=card_field_y
             )
         )
+        if card_regulation:
+            pokemon_content.append(
+                RawElements.RawText(
+                    text=card_regulation,
+                    font="helvetica",
+                    font_size=10,
+                    page_number=1,
+                    x=card_regulation_x,
+                    y=card_field_y,
+                )
+            )
         card_field_y -= 13.1
 
     pdf.draw(pokemon_content)
