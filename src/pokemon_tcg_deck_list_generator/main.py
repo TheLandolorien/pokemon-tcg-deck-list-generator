@@ -27,11 +27,25 @@ def run() -> None:
     logger.setLevel(logging.WARNING - args.verbose * 10)
 
     player_fields = {k.replace("player_", ""): v for k, v in vars(args).items() if k not in ["format", "verbose"]}
-    write_fields(format=args.format, player=Player(**player_fields))
+    player = Player(**player_fields)
+    font_path = PACKAGE_PATH / "assets" / "fonts" / "OpenSans_Condensed-Regular.ttf"
+    logger.debug(f"Font Path: {font_path}")
+
+    format = args.format.upper()
+    title = f"{player.name} Deck List - {format}"
+    decklist_template_path = PACKAGE_PATH / "assets" / "lists" / f"{format}.pdf"
+
+    decklist = PdfWrapper(str(decklist_template_path), title=title, need_appearances=True)
+    decklist.register_font("helvetica", str(font_path))
+    logger.info(f"Registered Fonts: {decklist.fonts}")
+
+    write_player_fields(pdf=decklist, player=player)
+
+    output_file_path = OUTPUT_DIR / f"{title}.pdf"
+    decklist.write(str(output_file_path))
 
 
-def write_fields(format: str, player: Player) -> None:
-    format = format.upper()
+def write_player_fields(pdf: PdfWrapper, player: Player) -> None:
     division_y = 649
     if player.division == "Senior":
         division_y = 662.5
@@ -47,17 +61,6 @@ def write_fields(format: str, player: Player) -> None:
         DeckListField(name="Player Birth Year", x=552, y=713, text=player_birthdate.year, size=10),
         DeckListField(name="Player Division", x=376.5, y=division_y, text="x", size=9),
     ]
-    title = f"{player.name} Deck List - {format}"
-
-    decklist_template_path = PACKAGE_PATH / "assets" / "lists" / f"{format}.pdf"
-    logger.debug(f"Template Path: {decklist_template_path}")
-
-    font_path = PACKAGE_PATH / "assets" / "fonts" / "OpenSans_Condensed-Regular.ttf"
-    logger.debug(f"Font Path: {font_path}")
-
-    decklist = PdfWrapper(str(decklist_template_path), title=title, need_appearances=True)
-    decklist.register_font("helvetica", str(font_path))
-    logger.info(f"Registered Fonts: {decklist.fonts}")
 
     content = [
         RawElements.RawText(
@@ -66,7 +69,4 @@ def write_fields(format: str, player: Player) -> None:
         for field in fields
     ]
 
-    decklist.draw(content)
-
-    output_file_path = OUTPUT_DIR / f"{title}.pdf"
-    decklist.write(str(output_file_path))
+    pdf.draw(content)
