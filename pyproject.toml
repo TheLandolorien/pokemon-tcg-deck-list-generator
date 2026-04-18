@@ -15,7 +15,7 @@ dependencies = [
 ]
 
 [tool.poetry.scripts]
-ptcg-generate-decklist = "pokemon_tcg_deck_list_generator.cli:run"
+ptcg-generate-decklist = "pokemon_tcg_deck_list_generator.main:run"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
