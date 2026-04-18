@@ -32,13 +32,20 @@ def run() -> None:
 
 def write_fields(format: str, player: Player) -> None:
     format = format.upper()
+    division_y = 649
+    if player.division == "Senior":
+        division_y = 662.5
+    elif player.division == "Junior":
+        division_y = 676
     player_birthdate = datetime.strptime(player.dob, "%Y-%m-%d")
+
     fields = [
         DeckListField(name="Player Name", x=95, y=713, text=player.name, size=10),
         DeckListField(name="Player ID", x=285, y=713, text=player.id, size=10),
         DeckListField(name="Player Birth Month", x=497, y=713, text=str(player_birthdate.month).zfill(2), size=10),
         DeckListField(name="Player Birth Day", x=524, y=713, text=str(player_birthdate.day).zfill(2), size=10),
         DeckListField(name="Player Birth Year", x=552, y=713, text=player_birthdate.year, size=10),
+        DeckListField(name="Player Division", x=376.5, y=division_y, text="x", size=9),
     ]
     title = f"{player.name} Deck List - {format}"
 
