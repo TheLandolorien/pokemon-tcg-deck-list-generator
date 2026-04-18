@@ -1,6 +1,7 @@
 import logging
 import sys
 import os
+import re
 from datetime import datetime
 from pathlib import Path
 from collections import namedtuple
@@ -110,10 +111,12 @@ def write_deck_fields(pdf: PdfWrapper, deck_path: str) -> None:
             pokemon.append(line)
 
     write_pokemon_list(pdf=pdf, pokemon=pokemon)
+    write_trainer_list(pdf=pdf, trainers=trainers)
 
 
 def write_pokemon_list(pdf: PdfWrapper, pokemon: list[str]) -> None:
     pokemon_content = []
+    card_pattern = re.compile(r"([1-9]{1,2}) (.+) ([A-Z]{3}) ([0-9]{1,3})")
 
     card_count_x = 274
     card_name_x = 300
@@ -121,8 +124,8 @@ def write_pokemon_list(pdf: PdfWrapper, pokemon: list[str]) -> None:
     card_number_x = 515
     card_field_y = 586
     for card in pokemon:
-        logger.info(f"Processing Card: {card}")
-        card_count, card_name, card_set, card_number = card.split()
+        logger.info(f"Processing Pokémon Card: {card}")
+        card_count, card_name, card_set, card_number = card_pattern.match(card).group(1, 2, 3, 4)  # type: ignore
         pokemon_content.append(
             RawElements.RawText(
                 text=card_count, font="helvetica", font_size=10, page_number=1, x=card_count_x, y=card_field_y
@@ -146,3 +149,29 @@ def write_pokemon_list(pdf: PdfWrapper, pokemon: list[str]) -> None:
         card_field_y -= 13.1
 
     pdf.draw(pokemon_content)
+
+
+def write_trainer_list(pdf: PdfWrapper, trainers: list[str]) -> None:
+    trainer_content = []
+    card_pattern = re.compile(r"([1-9]{1,2}) (.+) ([A-Z]{3}) ([0-9]{1,3})")
+
+    card_count_x = 274
+    card_name_x = 300
+    card_field_y = 410
+    for card in trainers:
+        logger.info(f"Processing Trainer Card: {card}")
+        card_count, card_name = card_pattern.match(card).group(1, 2)  # type: ignore
+
+        trainer_content.append(
+            RawElements.RawText(
+                text=card_count, font="helvetica", font_size=10, page_number=1, x=card_count_x, y=card_field_y
+            )
+        )
+        trainer_content.append(
+            RawElements.RawText(
+                text=card_name, font="helvetica", font_size=10, page_number=1, x=card_name_x, y=card_field_y
+            )
+        )
+        card_field_y -= 13.1
+
+    pdf.draw(trainer_content)
