@@ -112,6 +112,7 @@ def write_deck_fields(pdf: PdfWrapper, deck_path: str) -> None:
 
     write_pokemon_list(pdf=pdf, pokemon=pokemon)
     write_trainer_list(pdf=pdf, trainers=trainers)
+    write_energy_list(pdf=pdf, energy=energy)
 
 
 def write_pokemon_list(pdf: PdfWrapper, pokemon: list[str]) -> None:
@@ -153,7 +154,7 @@ def write_pokemon_list(pdf: PdfWrapper, pokemon: list[str]) -> None:
 
 def write_trainer_list(pdf: PdfWrapper, trainers: list[str]) -> None:
     trainer_content = []
-    card_pattern = re.compile(r"([1-9]{1,2}) (.+) ([A-Z]{3}) ([0-9]{1,3})")
+    card_pattern = re.compile(r"([1-9]{1,2}) (.+) [A-Z]{3} [0-9]{1,3}")
 
     card_count_x = 274
     card_name_x = 300
@@ -175,3 +176,29 @@ def write_trainer_list(pdf: PdfWrapper, trainers: list[str]) -> None:
         card_field_y -= 13.1
 
     pdf.draw(trainer_content)
+
+
+def write_energy_list(pdf: PdfWrapper, energy: list[str]) -> None:
+    energy_content = []
+    card_pattern = re.compile(r"([1-9]{1,2}) (.+) [A-Z]{3} [0-9]{1,3}")
+
+    card_count_x = 274
+    card_name_x = 300
+    card_field_y = 129
+    for card in energy:
+        logger.info(f"Processing Energy Card: {card}")
+        card_count, card_name = card_pattern.match(card).group(1, 2)  # type: ignore
+
+        energy_content.append(
+            RawElements.RawText(
+                text=card_count, font="helvetica", font_size=10, page_number=1, x=card_count_x, y=card_field_y
+            )
+        )
+        energy_content.append(
+            RawElements.RawText(
+                text=card_name, font="helvetica", font_size=10, page_number=1, x=card_name_x, y=card_field_y
+            )
+        )
+        card_field_y -= 13.1
+
+    pdf.draw(energy_content)
