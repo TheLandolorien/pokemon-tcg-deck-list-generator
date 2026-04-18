@@ -1,0 +1,22 @@
+[project]
+name = "pokemon-tcg-deck-list-generator"
+version = "0.1.0"
+description = "Generate PDF Pokemon TCG deck lists from PTCGL exports"
+authors = [
+    {name = "Lando Toothman",email = "25360446+TheLandolorien@users.noreply.github.com"}
+]
+license = {text = "MIT"}
+readme = "README.md"
+packages = [
+  { include = "pokemon_tcg_deck_list_generator", "from" = "src" }
+]
+requires-python = "3.13.7"
+dependencies = [
+]
+
+[tool.poetry.scripts]
+ptcg-generate-decklist = "pokemon_tcg_deck_list_generator.cli:run"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
