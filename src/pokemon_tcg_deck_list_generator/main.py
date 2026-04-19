@@ -11,7 +11,7 @@ from PyPDFForm import PdfWrapper, RawElements, BlankPage
 import pokemon_tcg_deck_list_generator.cli as cli
 
 DeckListField = namedtuple(typename="DeckListField", field_names=["name", "x", "y", "text", "size"])
-Player = namedtuple(typename="Player", field_names=["name", "id", "dob", "division"])
+Player = namedtuple(typename="Player", field_names=["name", "id", "dob"])
 
 logging.basicConfig(stream=sys.stdout, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -25,6 +25,9 @@ MAX_POKEMON = 10
 MAX_TRAINERS = 18
 MAX_ENERGY = 4
 
+JUNIOR_CUTOFF = 2014
+SENIOR_CUTOFF = 2010
+
 
 def run() -> None:
     args = cli.parse_args()
@@ -32,9 +35,7 @@ def run() -> None:
     logger.setLevel(logging.WARNING - args.verbose * 10)
 
     player_fields = {
-        k.replace("player_", ""): v
-        for k, v in vars(args).items()
-        if k in ["player_name", "player_id", "player_dob", "player_division"]
+        k.replace("player_", ""): v for k, v in vars(args).items() if k in ["player_name", "player_id", "player_dob"]
     }
     player = Player(**player_fields)
     font_path = PACKAGE_PATH / "assets" / "fonts" / "OpenSans_Condensed-Regular.ttf"
@@ -57,12 +58,13 @@ def run() -> None:
 
 
 def write_player_fields(pdf: PdfWrapper, player: Player) -> None:
-    division_y = 649
-    if player.division == "Senior":
-        division_y = 662.5
-    elif player.division == "Junior":
-        division_y = 676
     player_birthdate = datetime.strptime(player.dob, "%Y-%m-%d")
+
+    division_y = 649
+    if player_birthdate.year >= JUNIOR_CUTOFF:
+        division_y = 676
+    elif player_birthdate.year < JUNIOR_CUTOFF and player_birthdate.year >= SENIOR_CUTOFF:
+        division_y = 662.5
 
     fields = [
         DeckListField(name="Format", x=157.3, y=738.5, text="x", size=10),
