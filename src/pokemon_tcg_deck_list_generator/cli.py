@@ -11,6 +11,5 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("-b", "--player-dob", help="Player's Date of Birth", required=True)
     parser.add_argument("-d", "--deck-filename", help="Path to PTCGL Deck Export", required=True)
     parser.add_argument("-v", "--verbose", action="count", default=0)
-    parser.add_argument("-r", "--has-regulation", help="Has Regulation Marks in list", action="store_true")
 
     return parser.parse_args()

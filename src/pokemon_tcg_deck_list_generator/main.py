@@ -6,6 +6,8 @@ from datetime import datetime
 from pathlib import Path
 from collections import namedtuple
 
+import requests
+
 from PyPDFForm import PdfWrapper, RawElements, BlankPage
 
 import pokemon_tcg_deck_list_generator.cli as cli
@@ -50,7 +52,7 @@ def run() -> None:
     logger.info(f"Registered Fonts: {decklist.fonts}")
 
     write_player_fields(pdf=decklist, player=player)
-    final_pdf = write_deck_fields(pdf=decklist, deck_path=args.deck_filename, has_regulation=args.has_regulation)
+    final_pdf = write_deck_fields(pdf=decklist, deck_path=args.deck_filename)
 
     Path.mkdir(OUTPUT_DIR, exist_ok=True)
     output_file_path = OUTPUT_DIR / f"{title}.pdf"
@@ -86,7 +88,7 @@ def write_player_fields(pdf: PdfWrapper, player: Player) -> None:
     pdf.draw(content)
 
 
-def write_deck_fields(pdf: PdfWrapper, deck_path: str, has_regulation: bool = False) -> PdfWrapper:
+def write_deck_fields(pdf: PdfWrapper, deck_path: str) -> PdfWrapper:
     deck_export_path = ROOT_DIR / deck_path
 
     assert deck_export_path.exists(), f"{deck_export_path} does not exist"
@@ -124,16 +126,16 @@ def write_deck_fields(pdf: PdfWrapper, deck_path: str, has_regulation: bool = Fa
         second_page = PdfWrapper(BlankPage())
         pdf_deck_list = pdf + second_page
 
-    write_pokemon_list(pdf=pdf_deck_list, pokemon=pokemon, has_regulation=has_regulation)
+    write_pokemon_list(pdf=pdf_deck_list, pokemon=pokemon)
     write_trainer_list(pdf=pdf_deck_list, trainers=trainers)
     write_energy_list(pdf=pdf_deck_list, energy=energy)
 
     return pdf_deck_list
 
 
-def write_pokemon_list(pdf: PdfWrapper, pokemon: list[str], has_regulation: bool) -> None:
+def write_pokemon_list(pdf: PdfWrapper, pokemon: list[str]) -> None:
     pokemon_content = []
-    card_pattern = re.compile(r"([1-9]{1,2}) (.+) ([A-Z]{3}) ([0-9]{1,3})(.*)")
+    card_pattern = re.compile(r"([1-9]{1,2}) (.+) ([A-Z]{3}) ([0-9]{1,3})")
 
     card_count_x = 274
     card_name_x = 300
@@ -151,9 +153,7 @@ def write_pokemon_list(pdf: PdfWrapper, pokemon: list[str], has_regulation: bool
         match = card_pattern.match(card)
         card_count, card_name, card_set, card_number = match.group(1, 2, 3, 4)  # type: ignore
         logger.debug(f"Card Matches: {match.groups()}")  # type: ignore
-        card_regulation = None
-        if has_regulation:
-            card_regulation = match.group(5)[1]  # type: ignore
+        card_regulation = get_regulation_mark(set=card_set, number=card_number)
 
         pokemon_content.append(
             RawElements.RawText(
@@ -181,21 +181,26 @@ def write_pokemon_list(pdf: PdfWrapper, pokemon: list[str], has_regulation: bool
             )
         )
 
-        if card_regulation:
-            pokemon_content.append(
-                RawElements.RawText(
-                    text=card_regulation,
-                    font="helvetica",
-                    font_size=10,
-                    page_number=1,
-                    x=card_regulation_x,
-                    y=card_field_y,
-                )
+        pokemon_content.append(
+            RawElements.RawText(
+                text=card_regulation,
+                font="helvetica",
+                font_size=10,
+                page_number=1,
+                x=card_regulation_x,
+                y=card_field_y,
             )
+        )
 
         card_field_y -= 13.1
 
     pdf.draw(pokemon_content)
+
+
+def get_regulation_mark(set: str, number: str) -> str:
+    url = f"https://limitlesstcg.com/cards/{set}/{number}"
+    card_response = requests.get(url=url).text
+    return card_response[card_response.index("Regulation Mark") - 2]
 
 
 def write_trainer_list(pdf: PdfWrapper, trainers: list[str]) -> None:

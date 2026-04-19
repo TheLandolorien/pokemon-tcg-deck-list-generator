@@ -12,7 +12,8 @@ packages = [
 ]
 requires-python = "3.13.7"
 dependencies = [
-    "pypdfform (==4.8.0)"
+    "pypdfform (==4.8.0)",
+    "requests (>=2.33.1,<3.0.0)"
 ]
 
 [tool.poetry.scripts]
