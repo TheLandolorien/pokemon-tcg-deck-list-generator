@@ -61,6 +61,7 @@ def write_player_fields(pdf: PdfWrapper, player: Player) -> None:
     player_birthdate = datetime.strptime(player.dob, "%Y-%m-%d")
 
     fields = [
+        DeckListField(name="Format", x=157.3, y=738.5, text="x", size=10),
         DeckListField(name="Player Name", x=95, y=713, text=player.name, size=10),
         DeckListField(name="Player ID", x=285, y=713, text=player.id, size=10),
         DeckListField(name="Player Birth Month", x=497, y=713, text=str(player_birthdate.month).zfill(2), size=10),
