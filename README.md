@@ -15,7 +15,7 @@ poetry install
 Once dependencies are installed, you can run the `ptcg-generate-decklist` command with our information like this:
 
 ```shell
-poetry run ptcg-generate-decklist -p "First Last" -i 1234567 -b 2000-01-01 -a Junior -d deck_list.txt
+poetry run ptcg-generate-decklist -p "First Last" -i 1234567 -b 2014-01-01 -a Junior -d examples/2026-champions-league-osaka-1st-alakazam.txt
 ```
 
 And boom! You're ready to generate your Pokémon TCG Deck Lists via CLI! 🎉

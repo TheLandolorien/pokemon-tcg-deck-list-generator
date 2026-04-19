@@ -3,6 +3,7 @@
 
 # Input
 *.txt
+!examples/*.txt
 
 # Output
 output/
