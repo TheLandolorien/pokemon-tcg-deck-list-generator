@@ -6,7 +6,7 @@ from datetime import datetime
 from pathlib import Path
 from collections import namedtuple
 
-from PyPDFForm import PdfWrapper, RawElements
+from PyPDFForm import PdfWrapper, RawElements, BlankPage
 
 import pokemon_tcg_deck_list_generator.cli as cli
 
@@ -20,7 +20,10 @@ SRC_PATH, PACKAGE_NAME = os.path.split(os.path.dirname(__file__))
 PACKAGE_PATH = Path(SRC_PATH) / PACKAGE_NAME
 ROOT_DIR = Path(os.path.dirname(SRC_PATH))
 OUTPUT_DIR = ROOT_DIR / "output"
-Path.mkdir(OUTPUT_DIR, exist_ok=True)
+
+MAX_POKEMON = 10
+MAX_TRAINERS = 18
+MAX_ENERGY = 4
 
 
 def run() -> None:
@@ -46,10 +49,11 @@ def run() -> None:
     logger.info(f"Registered Fonts: {decklist.fonts}")
 
     write_player_fields(pdf=decklist, player=player)
-    write_deck_fields(pdf=decklist, deck_path=args.deck_filename, has_regulation=args.has_regulation)
+    final_pdf = write_deck_fields(pdf=decklist, deck_path=args.deck_filename, has_regulation=args.has_regulation)
 
+    Path.mkdir(OUTPUT_DIR, exist_ok=True)
     output_file_path = OUTPUT_DIR / f"{title}.pdf"
-    decklist.write(str(output_file_path))
+    final_pdf.write(str(output_file_path))
 
 
 def write_player_fields(pdf: PdfWrapper, player: Player) -> None:
@@ -80,7 +84,7 @@ def write_player_fields(pdf: PdfWrapper, player: Player) -> None:
     pdf.draw(content)
 
 
-def write_deck_fields(pdf: PdfWrapper, deck_path: str, has_regulation: bool = False) -> None:
+def write_deck_fields(pdf: PdfWrapper, deck_path: str, has_regulation: bool = False) -> PdfWrapper:
     deck_export_path = ROOT_DIR / deck_path
 
     assert deck_export_path.exists(), f"{deck_export_path} does not exist"
@@ -113,9 +117,16 @@ def write_deck_fields(pdf: PdfWrapper, deck_path: str, has_regulation: bool = Fa
         else:
             pokemon.append(line)
 
-    write_pokemon_list(pdf=pdf, pokemon=pokemon, has_regulation=has_regulation)
-    write_trainer_list(pdf=pdf, trainers=trainers)
-    write_energy_list(pdf=pdf, energy=energy)
+    pdf_deck_list = pdf
+    if len(pokemon) > MAX_POKEMON or len(trainers) > MAX_TRAINERS or len(energy) > MAX_ENERGY:
+        second_page = PdfWrapper(BlankPage())
+        pdf_deck_list = pdf + second_page
+
+    write_pokemon_list(pdf=pdf_deck_list, pokemon=pokemon, has_regulation=has_regulation)
+    write_trainer_list(pdf=pdf_deck_list, trainers=trainers)
+    write_energy_list(pdf=pdf_deck_list, energy=energy)
+
+    return pdf_deck_list
 
 
 def write_pokemon_list(pdf: PdfWrapper, pokemon: list[str], has_regulation: bool) -> None:
@@ -128,7 +139,12 @@ def write_pokemon_list(pdf: PdfWrapper, pokemon: list[str], has_regulation: bool
     card_number_x = 515
     card_regulation_x = 555
     card_field_y = 586
-    for card in pokemon:
+    page_number = 1
+    for idx, card in enumerate(pokemon):
+        if idx == MAX_POKEMON:
+            page_number = 2
+            card_field_y = 586
+
         logger.info(f"Processing Pokémon Card: {card}")
         match = card_pattern.match(card)
         card_count, card_name, card_set, card_number = match.group(1, 2, 3, 4)  # type: ignore
@@ -139,24 +155,30 @@ def write_pokemon_list(pdf: PdfWrapper, pokemon: list[str], has_regulation: bool
 
         pokemon_content.append(
             RawElements.RawText(
-                text=card_count, font="helvetica", font_size=10, page_number=1, x=card_count_x, y=card_field_y
+                text=card_count, font="helvetica", font_size=10, page_number=page_number, x=card_count_x, y=card_field_y
             )
         )
         pokemon_content.append(
             RawElements.RawText(
-                text=card_name, font="helvetica", font_size=10, page_number=1, x=card_name_x, y=card_field_y
+                text=card_name, font="helvetica", font_size=10, page_number=page_number, x=card_name_x, y=card_field_y
             )
         )
         pokemon_content.append(
             RawElements.RawText(
-                text=card_set, font="helvetica", font_size=10, page_number=1, x=card_set_x, y=card_field_y
+                text=card_set, font="helvetica", font_size=10, page_number=page_number, x=card_set_x, y=card_field_y
             )
         )
         pokemon_content.append(
             RawElements.RawText(
-                text=card_number, font="helvetica", font_size=10, page_number=1, x=card_number_x, y=card_field_y
+                text=card_number,
+                font="helvetica",
+                font_size=10,
+                page_number=page_number,
+                x=card_number_x,
+                y=card_field_y,
             )
         )
+
         if card_regulation:
             pokemon_content.append(
                 RawElements.RawText(
@@ -168,6 +190,7 @@ def write_pokemon_list(pdf: PdfWrapper, pokemon: list[str], has_regulation: bool
                     y=card_field_y,
                 )
             )
+
         card_field_y -= 13.1
 
     pdf.draw(pokemon_content)
