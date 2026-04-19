@@ -180,13 +180,12 @@ def write_pokemon_list(pdf: PdfWrapper, pokemon: list[str]) -> None:
                 y=card_field_y,
             )
         )
-
         pokemon_content.append(
             RawElements.RawText(
                 text=card_regulation,
                 font="helvetica",
                 font_size=10,
-                page_number=1,
+                page_number=page_number,
                 x=card_regulation_x,
                 y=card_field_y,
             )
