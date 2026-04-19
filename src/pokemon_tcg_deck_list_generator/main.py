@@ -30,6 +30,8 @@ MAX_ENERGY = 4
 JUNIOR_CUTOFF = 2014
 SENIOR_CUTOFF = 2010
 
+CURRENT_FORMAT = "POR"
+
 
 def run() -> None:
     args = cli.parse_args()
@@ -43,9 +45,8 @@ def run() -> None:
     font_path = PACKAGE_PATH / "assets" / "fonts" / "OpenSans_Condensed-Regular.ttf"
     logger.debug(f"Font Path: {font_path}")
 
-    format = args.format.upper()
-    title = f"{player.name} Deck List - {format}"
-    decklist_template_path = PACKAGE_PATH / "assets" / "lists" / f"{format}.pdf"
+    title = f"{player.name} Deck List - {CURRENT_FORMAT}"
+    decklist_template_path = PACKAGE_PATH / "assets" / "play-pokemon-deck-list-85x11.pdf"
 
     decklist = PdfWrapper(str(decklist_template_path), title=title, need_appearances=True)
     decklist.register_font("helvetica", str(font_path))
