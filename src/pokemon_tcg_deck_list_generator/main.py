@@ -30,7 +30,7 @@ MAX_ENERGY = 4
 JUNIOR_CUTOFF = 2014
 SENIOR_CUTOFF = 2010
 
-CURRENT_FORMAT = "POR"
+CURRENT_FORMAT = "30C"
 
 
 def run() -> None:
@@ -39,7 +39,9 @@ def run() -> None:
     logger.setLevel(logging.WARNING - args.verbose * 10)
 
     player_fields = {
-        k.replace("player_", ""): v for k, v in vars(args).items() if k in ["player_name", "player_id", "player_dob"]
+        k.replace("player_", ""): v
+        for k, v in vars(args).items()
+        if k in ["player_name", "player_id", "player_dob"]
     }
     player = Player(**player_fields)
     font_path = PACKAGE_PATH / "assets" / "fonts" / "OpenSans_Condensed-Regular.ttf"
@@ -73,15 +75,28 @@ def write_player_fields(pdf: PdfWrapper, player: Player) -> None:
         DeckListField(name="Format", x=157.3, y=738.5, text="x", size=10),
         DeckListField(name="Player Name", x=95, y=713, text=player.name, size=10),
         DeckListField(name="Player ID", x=285, y=713, text=player.id, size=10),
-        DeckListField(name="Player Birth Month", x=497, y=713, text=str(player_birthdate.month).zfill(2), size=10),
-        DeckListField(name="Player Birth Day", x=524, y=713, text=str(player_birthdate.day).zfill(2), size=10),
+        DeckListField(
+            name="Player Birth Month",
+            x=497,
+            y=713,
+            text=str(player_birthdate.month).zfill(2),
+            size=10,
+        ),
+        DeckListField(
+            name="Player Birth Day", x=524, y=713, text=str(player_birthdate.day).zfill(2), size=10
+        ),
         DeckListField(name="Player Birth Year", x=552, y=713, text=player_birthdate.year, size=10),
         DeckListField(name="Player Division", x=376.5, y=division_y, text="x", size=9),
     ]
 
     content = [
         RawElements.RawText(
-            text=field.text, font="helvetica", font_size=field.size, page_number=1, x=field.x, y=field.y
+            text=field.text,
+            font="helvetica",
+            font_size=field.size,
+            page_number=1,
+            x=field.x,
+            y=field.y,
         )
         for field in fields
     ]
@@ -158,17 +173,32 @@ def write_pokemon_list(pdf: PdfWrapper, pokemon: list[str]) -> None:
 
         pokemon_content.append(
             RawElements.RawText(
-                text=card_count, font="helvetica", font_size=10, page_number=page_number, x=card_count_x, y=card_field_y
+                text=card_count,
+                font="helvetica",
+                font_size=10,
+                page_number=page_number,
+                x=card_count_x,
+                y=card_field_y,
             )
         )
         pokemon_content.append(
             RawElements.RawText(
-                text=card_name, font="helvetica", font_size=10, page_number=page_number, x=card_name_x, y=card_field_y
+                text=card_name,
+                font="helvetica",
+                font_size=10,
+                page_number=page_number,
+                x=card_name_x,
+                y=card_field_y,
             )
         )
         pokemon_content.append(
             RawElements.RawText(
-                text=card_set, font="helvetica", font_size=10, page_number=page_number, x=card_set_x, y=card_field_y
+                text=card_set,
+                font="helvetica",
+                font_size=10,
+                page_number=page_number,
+                x=card_set_x,
+                y=card_field_y,
             )
         )
         pokemon_content.append(
@@ -216,12 +246,22 @@ def write_trainer_list(pdf: PdfWrapper, trainers: list[str]) -> None:
 
         trainer_content.append(
             RawElements.RawText(
-                text=card_count, font="helvetica", font_size=10, page_number=1, x=card_count_x, y=card_field_y
+                text=card_count,
+                font="helvetica",
+                font_size=10,
+                page_number=1,
+                x=card_count_x,
+                y=card_field_y,
             )
         )
         trainer_content.append(
             RawElements.RawText(
-                text=card_name, font="helvetica", font_size=10, page_number=1, x=card_name_x, y=card_field_y
+                text=card_name,
+                font="helvetica",
+                font_size=10,
+                page_number=1,
+                x=card_name_x,
+                y=card_field_y,
             )
         )
         card_field_y -= 13.1
@@ -242,12 +282,22 @@ def write_energy_list(pdf: PdfWrapper, energy: list[str]) -> None:
 
         energy_content.append(
             RawElements.RawText(
-                text=card_count, font="helvetica", font_size=10, page_number=1, x=card_count_x, y=card_field_y
+                text=card_count,
+                font="helvetica",
+                font_size=10,
+                page_number=1,
+                x=card_count_x,
+                y=card_field_y,
             )
         )
         energy_content.append(
             RawElements.RawText(
-                text=card_name, font="helvetica", font_size=10, page_number=1, x=card_name_x, y=card_field_y
+                text=card_name,
+                font="helvetica",
+                font_size=10,
+                page_number=1,
+                x=card_name_x,
+                y=card_field_y,
             )
         )
         card_field_y -= 13.1
